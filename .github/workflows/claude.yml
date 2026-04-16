@@ -1,4 +1,4 @@
-name: Claude AI Assistant (MiniMax M2.7)
+name: Claude AI Audit (MiniMax)
 
 on:
   push:
@@ -6,12 +6,19 @@ on:
   pull_request:
     types: [opened, synchronize]
 
+# 限制权限，确保安全
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
-  ai-task:
+  ai-analysis:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 获取完整历史以便 AI 对比差异
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -21,15 +28,16 @@ jobs:
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
 
-      - name: Configure Claude for MiniMax
+      - name: Run Claude with MiniMax
+        shell: bash
+        env:
+          # 填入你在 GitHub Secrets 中配置的变量
+          CLAUDE_BASE_URL: ${{ secrets.MINIMAX_BASE_URL }}
+          CLAUDE_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+          # MiniMax 模型名称需与你调用的 API 接口要求一致
+          CLAUDE_MODEL: "minimax-m2.7" 
         run: |
-          # 针对 MiniMax M2.7 的自定义配置 (需根据你使用的连接器/脚本进行调整)
-          # 注意：Claude Code 原生支持 Anthropic，使用国产模型通常需要类似 claude-code-kimi-groq 的中间层
-          export CLAUDE_BASE_URL=${{ secrets.MINIMAX_BASE_URL }}
-          export CLAUDE_API_KEY=${{ secrets.MINIMAX_API_KEY }}
-          export CLAUDE_MODEL="minimax-m2.7"
-
-      - name: Run Non-Interactive Command
-        run: |
-          # 使用 --yes 或类似非交互模式标志执行任务
-          claude "请检查当前代码逻辑并提出优化建议" --non-interactive
+          # 使用 -p 开启非交互模式，打印结果后退出
+          # 使用 --allowedTools 授权 AI 可以执行的操作，防止因权限请求导致挂起
+          claude -p "请检查最近提交的代码，分析潜在的 Bug 或性能瓶颈，并给出简短的优化建议。" \
+                 --allowedTools "ls,cat,grep,read_file"
