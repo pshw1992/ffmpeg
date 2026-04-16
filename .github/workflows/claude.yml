@@ -1,15 +1,10 @@
-name: Claude AI Audit (MiniMax)
+name: Claude AI Audit (MiniMax M2.7)
 
 on:
   push:
     branches: [ main ]
   pull_request:
     types: [opened, synchronize]
-
-# 限制权限，确保安全
-permissions:
-  contents: read
-  pull-requests: write
 
 jobs:
   ai-analysis:
@@ -18,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # 获取完整历史以便 AI 对比差异
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -31,13 +26,13 @@ jobs:
       - name: Run Claude with MiniMax
         shell: bash
         env:
-          # 填入你在 GitHub Secrets 中配置的变量
-          CLAUDE_BASE_URL: ${{ secrets.MINIMAX_BASE_URL }}
-          CLAUDE_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
-          # MiniMax 模型名称需与你调用的 API 接口要求一致
+          # 关键：映射到 ANTHROPIC 变量名以跳过登录校验
+          ANTHROPIC_BASE_URL: ${{ secrets.MINIMAX_BASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+          # 指定模型
           CLAUDE_MODEL: "minimax-m2.7" 
         run: |
-          # 使用 -p 开启非交互模式，打印结果后退出
-          # 使用 --allowedTools 授权 AI 可以执行的操作，防止因权限请求导致挂起
-          claude -p "请检查最近提交的代码，分析潜在的 Bug 或性能瓶颈，并给出简短的优化建议。" \
-                 --allowedTools "ls,cat,grep,read_file"
+          # -p: 非交互打印模式
+          # --dangerously-skip-permissions: 自动允许文件读取/执行工具
+          claude -p "请检查最近提交的代码变化，分析潜在的 Bug 或性能瓶颈，并给出优化建议。" \
+                 --dangerously-skip-permissions
