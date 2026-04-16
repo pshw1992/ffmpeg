@@ -33,7 +33,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         env:
           # 使用 MiniMax 的 API Key（请在 GitHub Secrets 中设置）
-          ANTHROPIC_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+          ANTHROPIC_API_KEY: "sk-cp-VgxLDvZQHwVR9L4NHx5LayvLO421YMSTA00JpPMcJJ4Qn-oeiXlNGK3X5aLPUn8crkWu6gFyrgjRMqkW6QDkwuED42IpqEevji-KsT6szWCJ7Vv--hy9nqc"
           # 核心设置：指向 MiniMax 的 Anthropic 兼容端点
           ANTHROPIC_BASE_URL: "https://minimax.io"
           # 指定使用的模型名称
